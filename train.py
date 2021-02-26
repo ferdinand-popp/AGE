@@ -14,6 +14,8 @@ import random
 import numpy as np
 import scipy.sparse as sp
 import torch
+import pandas as pd
+import umap
 
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -30,18 +32,18 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gnnlayers', type=int, default=3, help="Number of gnn layers")
+parser.add_argument('--gnnlayers', type=int, default=1, help="Number of gnn layers")
 parser.add_argument('--linlayers', type=int, default=1, help="Number of hidden layers")
 parser.add_argument('--epochs', type=int, default=400, help='Number of epochs to train.')
-parser.add_argument('--dims', type=int, default=[500], help='Number of units in hidden layer 1.')
+parser.add_argument('--dims', type=int, default=[16], help='Number of units in hidden layer 1.')
 parser.add_argument('--lr', type=float, default=0.001, help='Initial learning rate.')
 parser.add_argument('--upth_st', type=float, default=0.0015, help='Upper Threshold start.')
 parser.add_argument('--lowth_st', type=float, default=0.1, help='Lower Threshold start.')
 parser.add_argument('--upth_ed', type=float, default=0.001, help='Upper Threshold end.')
 parser.add_argument('--lowth_ed', type=float, default=0.5, help='Lower Threshold end.')
-parser.add_argument('--upd', type=int, default=10, help='Update epoch.')
+parser.add_argument('--upd', type=int, default=100, help='Update epoch.')
 parser.add_argument('--bs', type=int, default=10000, help='Batchsize.')
-parser.add_argument('--dataset', type=str, default='citeseer', help='type of dataset.')
+parser.add_argument('--dataset', type=str, default='LUAD', help='type of dataset.')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='Disables CUDA training.')
 args = parser.parse_args()
@@ -53,6 +55,8 @@ if args.cuda is True:
     os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 def clustering(Cluster, feature, true_labels):
+    if args.dataset == 'LUAD':
+        return 0,0,0,0
     f_adj = np.matmul(feature, np.transpose(feature))
     predict_labels = Cluster.fit_predict(f_adj)
     
@@ -94,6 +98,9 @@ def gae_for(args):
     elif args.dataset == 'wiki':
         n_clusters = 17
         Cluster = SpectralClustering(n_clusters=n_clusters, affinity = 'precomputed', random_state=0)
+    elif args.dataset == 'LUAD':
+        n_clusters = 5
+        Cluster = SpectralClustering(n_clusters=n_clusters, affinity='precomputed', random_state=0)
     
     adj, features, true_labels, idx_train, idx_val, idx_test = load_data(args.dataset)
     n_nodes, feat_dim = features.shape
@@ -195,6 +202,9 @@ def gae_for(args):
                 epoch + 1, cur_loss, time.time() - t))
             
             db, acc, nmi, adjscore = clustering(Cluster, hidden_emb, true_labels)
+            #own testing
+            result_df = projection(hidden_emb)
+            plot_embedding(result_df, epoch)
             
             if db >= best_cl:
                 best_cl = db
@@ -205,7 +215,23 @@ def gae_for(args):
         
     tqdm.write("Optimization Finished!")
     tqdm.write('best_acc: {}, best_nmi: {}, best_adj: {}'.format(best_acc, best_nmi, best_adj))
-    
+
+def projection(z):
+    projection = umap.UMAP(n_components=2, random_state=42)
+    result = projection.fit_transform(z)
+    result_df = pd.DataFrame({'firstdim': result[:, 0], 'seconddim': result[:, 1]})
+    return  result_df
+
+
+def plot_embedding(df, epoch):
+    fig = plt.figure()
+    plt.scatter(df.iloc[:, 0], df.iloc[:, 1], s=20)
+    title = 'Testing'
+    plt.title(title)
+    plt.xlabel('Dimension 1')
+    plt.ylabel('Dimension 2')
+    #plt.show()
+    plt.savefig(f'runs/Epoch{epoch}.png')
 
 if __name__ == '__main__':
     gae_for(args)

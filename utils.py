@@ -7,6 +7,7 @@ import torch
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, average_precision_score
 import sklearn.preprocessing as preprocess
+from scipy import sparse
 
 def sample_mask(idx, l):
     """Create mask."""
@@ -19,6 +20,16 @@ def load_data(dataset):
     # load the data: x, tx, allx, graph
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
     objects = []
+    if dataset == 'LUAD':
+        print('Loading LUAD data')
+        data = torch.load(r'/media/administrator/INTERNAL3_6TB/TCGA_data/LUAD/raw/data_208_2021-02-26.pt')
+        adj = sp.csr_matrix(data.adj_self.values)
+        true_labels = []
+        features = data.x
+        idx_train = idx_test = idx_val = []
+        # adj csr_matrix, features tensor, true_labels list with int, idx_train range 0-140, idx_val range 140-640, idx_test list 1000 ints
+        return adj, features, true_labels, idx_train, idx_val, idx_test
+
     if dataset == 'wiki':
         adj, features, label = load_wiki()
         return adj, features, label, 0, 0, 0
@@ -75,6 +86,7 @@ def load_data(dataset):
     y_val[val_mask, :] = labels[val_mask, :]
     y_test[test_mask, :] = labels[test_mask, :]
 
+    #adj csr_matrix, features tensor, true_labels list with int, idx_train range 0-140, idx_val range 140-640, idx_test list 1000 ints
     return adj, features, np.argmax(labels, 1), idx_train, idx_val, idx_test
 
 def load_wiki():
