@@ -32,6 +32,7 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', type=str, default='LUAD', help='type of dataset.')
 parser.add_argument('--gnnlayers', type=int, default=1, help="Number of gnn layers")
 parser.add_argument('--linlayers', type=int, default=1, help="Number of hidden layers")
 parser.add_argument('--epochs', type=int, default=400, help='Number of epochs to train.')
@@ -43,7 +44,6 @@ parser.add_argument('--upth_ed', type=float, default=0.001, help='Upper Threshol
 parser.add_argument('--lowth_ed', type=float, default=0.5, help='Lower Threshold end.')
 parser.add_argument('--upd', type=int, default=100, help='Update epoch.')
 parser.add_argument('--bs', type=int, default=10000, help='Batchsize.')
-parser.add_argument('--dataset', type=str, default='LUAD', help='type of dataset.')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='Disables CUDA training.')
 args = parser.parse_args()
@@ -99,7 +99,7 @@ def gae_for(args):
         n_clusters = 17
         Cluster = SpectralClustering(n_clusters=n_clusters, affinity = 'precomputed', random_state=0)
     elif args.dataset == 'LUAD':
-        n_clusters = 5
+        n_clusters = 7
         Cluster = SpectralClustering(n_clusters=n_clusters, affinity='precomputed', random_state=0)
     
     adj, features, true_labels, idx_train, idx_val, idx_test = load_data(args.dataset)

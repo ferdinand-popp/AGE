@@ -22,7 +22,7 @@ def load_data(dataset):
     objects = []
     if dataset == 'LUAD':
         print('Loading LUAD data')
-        data = torch.load(r'/media/administrator/INTERNAL3_6TB/TCGA_data/LUAD/raw/data_208_2021-02-26.pt')
+        data = torch.load(r'/media/administrator/INTERNAL3_6TB/TCGA_data/pyt_datasets/NSCLC/raw/numerical_data_308_2021-03-18.pt')
         adj = sp.csr_matrix(data.adj_self.values)
         true_labels = []
         features = data.x
