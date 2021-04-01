@@ -1,3 +1,5 @@
+# Forked from thunIP!
+slightly adjusted to use a pytorch data object from the repository [Deep patient network](https://github.com/ferdinand-popp/Deepan)
 # AGE
 Source code and datasets for KDD 2020 paper "Adaptive Graph Encoder for Attributed Graph Embedding"
 
